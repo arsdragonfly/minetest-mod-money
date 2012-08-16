@@ -175,10 +175,11 @@ minetest.register_chatcommand("money", {
 									minetest.chat_send_player(name, param2 .. " " .. CURRENCY_PREFIX .. param3 .. CURRENCY_POSTFIX)
 								elseif param1 == "inc" then
 									set_money(param2, get_money(param2) + param3)
-									minetest.chat_send_player(name, param2 .. " " .. CURRENCY_PREFIX .. param3 .. CURRENCY_POSTFIX)
+									minetest.chat_send_player(name, param2 .. " " .. CURRENCY_PREFIX .. get_money(param2) .. CURRENCY_POSTFIX)
 								elseif param1 == "dec" then
 									if get_money(param2) >= param3 then
 										set_money(param2, get_money(param2) - param3)
+										minetest.chat_send_player(name, param2 .. " " .. CURRENCY_PREFIX .. get_money(param2) .. CURRENCY_POSTFIX)
 									else
 										minetest.chat_send_player(name, "Player named \""..param2.."\" do not have enough " .. CURRENCY_PREFIX .. param3 - get_money(player) .. CURRENCY_POSTFIX .. ".")
 									end
@@ -232,6 +233,8 @@ minetest.register_node("money:shop", {
 			"button_exit[3.1,6;2,1;button;Proceed]")
 		meta:set_string("infotext", "Untuned Shop")
 		meta:set_string("owner", "")
+		local inv = meta:get_inventory()
+		inv:set_size("main", 8*4)
 		meta:set_string("form", "yes")
 	end,
 	can_dig = function(pos,player)
@@ -261,7 +264,7 @@ minetest.register_node("money:shop", {
 		end
 		return stack:get_count()
 	end,
-    allow_metadata_inventory_take = function(pos, listname, index, count, player)
+    allow_metadata_inventory_take = function(pos, listname, index, stack, player)
 		local meta = minetest.env:get_meta(pos)
 		if not has_shop_privilege(meta, player) then
 			minetest.log("action", player:get_player_name()..
@@ -270,7 +273,7 @@ minetest.register_node("money:shop", {
 					minetest.pos_to_string(pos))
 			return 0
 		end
-		return count
+		return stack:get_count()
 	end,
     on_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, count, player)
 		minetest.log("action", player:get_player_name()..
@@ -341,8 +344,6 @@ minetest.register_node("money:shop", {
 				meta:set_string("costbuy", fields.costsell)
 				meta:set_string("costsell", fields.costbuy)
 				meta:set_string("infotext", "Shop \"" .. fields.shopname .. "\" (owned by " .. meta:get_string("owner") .. ")")
-				local inv = meta:get_inventory()
-				inv:set_size("main", 8*4)
 				meta:set_string("form", "no")
 			end
 		elseif fields["buttonbuy"] then
@@ -451,7 +452,7 @@ minetest.register_node("money:barter_shop", {
 		end
 		return stack:get_count()
 	end,
-    allow_metadata_inventory_take = function(pos, listname, index, count, player)
+    allow_metadata_inventory_take = function(pos, listname, index, stack, player)
 		local meta = minetest.env:get_meta(pos)
 		if not has_shop_privilege(meta, player) then
 			minetest.log("action", player:get_player_name()..
@@ -460,7 +461,7 @@ minetest.register_node("money:barter_shop", {
 					minetest.pos_to_string(pos))
 			return 0
 		end
-		return count
+		return stack:get_count()
 	end,
     on_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, count, player)
 		minetest.log("action", player:get_player_name()..
