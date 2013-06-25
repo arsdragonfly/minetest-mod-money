@@ -359,6 +359,9 @@ minetest.register_node("money:shop", {
 			elseif get_money(sender_name) - tonumber(meta:get_string("costbuy")) < 0 then
 				minetest.chat_send_player(sender_name, "You do not have enough money.")
 				return true
+			elseif not exist(meta:get_string("owner")) then
+				minetest.chat_send_player(sender_name, "The owner's account does not currently exist; try again later.")
+				return true
 			end
 			set_money(sender_name, get_money(sender_name) - meta:get_string("costbuy"))
 			set_money(meta:get_string("owner"), get_money(meta:get_string("owner")) + meta:get_string("costbuy"))
@@ -377,6 +380,9 @@ minetest.register_node("money:shop", {
 				return true
 			elseif get_money(meta:get_string("owner")) - meta:get_string("costsell") < 0 then
 				minetest.chat_send_player(sender_name, "The buyer is not enough money.") 
+				return true
+			elseif not exist(meta:get_string("owner")) then
+				minetest.chat_send_player(sender_name, "The owner's account does not currently exist; try again later.")
 				return true
 			end
 			set_money(sender_name, get_money(sender_name) + meta:get_string("costsell"))
