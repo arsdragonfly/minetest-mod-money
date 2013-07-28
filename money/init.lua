@@ -71,7 +71,7 @@ minetest.register_on_joinplayer(function(player)
 	end
 end)
 --End.
-	
+
 --Registration privileges.
 minetest.register_privilege("money", "Can use /money [pay <account> <amount>] command")
 minetest.register_privilege("money_admin", {
@@ -134,7 +134,7 @@ minetest.register_chatcommand("money", {
 		end
 		if param1 and param2 and param3 then --/money pay/take/set/inc/dec <account> <amount>
 			if param1 == "pay" or param1 == "take" or param1 == "set" or param1 == "inc" or param1 == "dec" then
-				if exist(param2) then				
+				if exist(param2) then
 					if tonumber(param3) then
 						if tonumber(param3) >= 0 then
 							param3 = tonumber(param3)
@@ -154,7 +154,7 @@ minetest.register_chatcommand("money", {
 									end
 								else
 									minetest.chat_send_player(name, "Your account is frozen.")
-								end	
+								end
 								return true
 							end
 							if minetest.get_player_privs(name)["money_admin"] then
@@ -230,13 +230,39 @@ minetest.register_node("money:shop", {
 			"field[0.256,3.5;8,1;amount;Amount of these nodes:;]"..
 			"field[0.256,4.5;8,1;costbuy;Cost of purchase, if you buy nodes:;]"..
 			"field[0.256,5.5;8,1;costsell;Cost of sales, if you sell nodes:;]"..
-			"button_exit[3.1,6;2,1;button;Proceed]")
+			"button_exit[3.1,6;2,1;button;Tune]")
 		meta:set_string("infotext", "Untuned Shop")
 		meta:set_string("owner", "")
 		local inv = meta:get_inventory()
 		inv:set_size("main", 8*4)
 		meta:set_string("form", "yes")
 	end,
+
+--retune
+
+	on_punch = function( pos, node, player )
+		local meta = minetest.env:get_meta(pos)
+		--~ minetest.chat_send_all("Shop punched.")
+		--~ minetest.chat_send_all(name)
+
+		if player:get_player_name() == meta:get_string("owner") then
+			meta:set_string("formspec", "size[8,6.6]"..
+				"field[0.256,0.5;8,1;shopname;Name of your shop:;${shopname}]"..
+				"field[0.256,1.5;8,1;action;Do you want buy(B) or sell(S) or buy and sell(BS):;${action}]"..
+				"field[0.256,2.5;8,1;nodename;Name of node, that you want buy or/and sell:;${nodename}]"..
+				"field[0.256,3.5;8,1;amount;Amount of these nodes:;${amount}]"..
+				"field[0.256,4.5;8,1;costbuy;Cost of purchase, if you buy nodes:;${costbuy}]"..
+				"field[0.256,5.5;8,1;costsell;Cost of sales, if you sell nodes:;${costsell}]"..
+				"button_exit[3.1,6;2,1;button;Retune]")
+			meta:set_string("infotext", "Detuned Shop")
+			meta:set_string("form", "yes")
+
+			minetest.chat_send_player( name, "Shop detuned.")
+		end
+	end,
+
+--end retune
+
 	can_dig = function(pos,player)
 		local meta = minetest.env:get_meta(pos);
 		local inv = meta:get_inventory()
@@ -264,7 +290,7 @@ minetest.register_node("money:shop", {
 		end
 		return stack:get_count()
 	end,
-    allow_metadata_inventory_take = function(pos, listname, index, stack, player)
+	allow_metadata_inventory_take = function(pos, listname, index, stack, player)
 		local meta = minetest.env:get_meta(pos)
 		if not has_shop_privilege(meta, player) then
 			minetest.log("action", player:get_player_name()..
@@ -275,15 +301,15 @@ minetest.register_node("money:shop", {
 		end
 		return stack:get_count()
 	end,
-    on_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, count, player)
+	on_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, count, player)
 		minetest.log("action", player:get_player_name()..
 				" moves stuff in shop at "..minetest.pos_to_string(pos))
 	end,
-    on_metadata_inventory_put = function(pos, listname, index, stack, player)
+	on_metadata_inventory_put = function(pos, listname, index, stack, player)
 		minetest.log("action", player:get_player_name()..
 				" moves stuff to shop at "..minetest.pos_to_string(pos))
 	end,
-    on_metadata_inventory_take = function(pos, listname, index, count, player)
+	on_metadata_inventory_take = function(pos, listname, index, count, player)
 		minetest.log("action", player:get_player_name()..
 				" takes stuff from shop at "..minetest.pos_to_string(pos))
 	end,
@@ -339,6 +365,7 @@ minetest.register_node("money:shop", {
 					ss..
 					"list[current_player;main;0,6;8,4;]")
 				meta:set_string("shopname", fields.shopname)
+				meta:set_string("action", fields.action)
 				meta:set_string("nodename", fields.nodename)
 				meta:set_string("amount", fields.amount)
 				meta:set_string("costbuy", fields.costsell)
@@ -379,7 +406,7 @@ minetest.register_node("money:shop", {
 				minetest.chat_send_player(sender_name, "In the shop is not enough space.")
 				return true
 			elseif get_money(meta:get_string("owner")) - meta:get_string("costsell") < 0 then
-				minetest.chat_send_player(sender_name, "The buyer is not enough money.") 
+				minetest.chat_send_player(sender_name, "The buyer is not enough money.")
 				return true
 			elseif not exist(meta:get_string("owner")) then
 				minetest.chat_send_player(sender_name, "The owner's account does not currently exist; try again later.")
@@ -426,11 +453,36 @@ minetest.register_node("money:barter_shop", {
 			"field[0.256,2.5;8,1;nodename2;for:;]"..
 			"field[0.256,3.5;8,1;amount1;Amount of first kind of node:;]"..
 			"field[0.256,4.5;8,1;amount2;Amount of second kind of node:;]"..
-			"button_exit[3.1,5;2,1;button;Proceed]")
+			"button_exit[3.1,5;2,1;button;Tune]")
 		meta:set_string("infotext", "Untuned Barter Shop")
 		meta:set_string("owner", "")
 		meta:set_string("form", "yes")
 	end,
+
+--retune
+
+	on_punch = function( pos, node, player )
+		local meta = minetest.env:get_meta(pos)
+		--~ minetest.chat_send_all("Barter Shop punched.")
+		--~ minetest.chat_send_all(name)
+
+		if player:get_player_name() == meta:get_string("owner") then
+		meta:set_string("formspec", "size[8,5.6]"..
+			"field[0.256,0.5;8,1;bartershopname;Name of your barter shop:;${bartershopname}]"..
+			"field[0.256,1.5;8,1;nodename1;What kind of a node do you want to exchange:;${nodename1}]"..
+			"field[0.256,2.5;8,1;nodename2;for:;${nodename2}]"..
+			"field[0.256,3.5;8,1;amount1;Amount of first kind of node:;${amount1}]"..
+			"field[0.256,4.5;8,1;amount2;Amount of second kind of node:;${amount2}]"..
+			"button_exit[3.1,5;2,1;button;Retune]")
+			meta:set_string("infotext", "Detuned Barter Shop")
+			meta:set_string("form", "yes")
+
+			minetest.chat_send_player( name, "Barter Shop detuned.")
+		end
+	end,
+
+--end retune
+
 	can_dig = function(pos,player)
 		local meta = minetest.env:get_meta(pos);
 		local inv = meta:get_inventory()
@@ -458,7 +510,7 @@ minetest.register_node("money:barter_shop", {
 		end
 		return stack:get_count()
 	end,
-    allow_metadata_inventory_take = function(pos, listname, index, stack, player)
+	allow_metadata_inventory_take = function(pos, listname, index, stack, player)
 		local meta = minetest.env:get_meta(pos)
 		if not has_shop_privilege(meta, player) then
 			minetest.log("action", player:get_player_name()..
@@ -469,15 +521,15 @@ minetest.register_node("money:barter_shop", {
 		end
 		return stack:get_count()
 	end,
-    on_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, count, player)
+	on_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, count, player)
 		minetest.log("action", player:get_player_name()..
 				" moves stuff in barter shop at "..minetest.pos_to_string(pos))
 	end,
-    on_metadata_inventory_put = function(pos, listname, index, stack, player)
+	on_metadata_inventory_put = function(pos, listname, index, stack, player)
 		minetest.log("action", player:get_player_name()..
 				" moves stuff to barter shop at "..minetest.pos_to_string(pos))
 	end,
-    on_metadata_inventory_take = function(pos, listname, index, count, player)
+	on_metadata_inventory_take = function(pos, listname, index, count, player)
 		minetest.log("action", player:get_player_name()..
 				" takes stuff from barter shop at "..minetest.pos_to_string(pos))
 	end,
@@ -521,12 +573,12 @@ minetest.register_node("money:barter_shop", {
 			sender_inv:remove_item("main", meta:get_string("nodename2") .. " " .. meta:get_string("amount2"))
 			inv:add_item("main", meta:get_string("nodename2") .. " " .. meta:get_string("amount2"))
 			sender_inv:add_item("main", meta:get_string("nodename1") .. " " .. meta:get_string("amount1"))
-			minetest.chat_send_player(sender_name, "You exchanged " .. meta:get_string("amount2") .. " " .. meta:get_string("nodename2") .. " on " .. meta:get_string("amount1") .. " " .. meta:get_string("nodename1") .. ".")
+			minetest.chat_send_player(sender_name, "You exchanged " .. meta:get_string("amount2") .. " " .. meta:get_string("nodename2") .. " for " .. meta:get_string("amount1") .. " " .. meta:get_string("nodename1") .. ".")
 		end
 	end,
 })
 --End.
-	
+
 minetest.register_craft({--Barter shop recipe.
 	output = "money:barter_shop",
 	recipe = {
@@ -703,3 +755,4 @@ minetest.register_node("money:admin_barter_shop", {
 --End.
 
 minetest.register_alias("admin_barter_shop", "money:admin_barter_shop")
+
