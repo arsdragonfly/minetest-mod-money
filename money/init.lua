@@ -147,7 +147,7 @@ minetest.register_chatcommand("money", {
 											minetest.chat_send_player(param2, name .. " sent you " .. CURRENCY_PREFIX .. param3 .. CURRENCY_POSTFIX .. ".")
 											minetest.chat_send_player(name, param2 .. " took your " .. CURRENCY_PREFIX .. param3 .. CURRENCY_POSTFIX .. ".")
 										else
-											minetest.chat_send_player(name, "You don't have enough " .. CURRENCY_PREFIX .. amount - get_money(name) .. CURRENCY_POSTFIX .. ".")
+											minetest.chat_send_player(name, "You don't have enough " .. CURRENCY_PREFIX .. param3 - get_money(name) .. CURRENCY_POSTFIX .. ".")
 										end
 									else
 										minetest.chat_send_player(name, "\"" .. param2 .. "\" account is frozen.")
