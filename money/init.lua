@@ -1,5 +1,5 @@
 --[[
-    Mod by kotolegokot
+    Mod by Kotolegokot and Xiong
     Version 2012.8.12.0
 ]]
 
